@@ -1,6 +1,6 @@
 <div class="modal modal-blur fade" id="modal-report" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">
-        <form action="{{route('company.upload_data')}}" method="POST" enctype="multipart/form-data">
+        <form action="{{route('company.chat.store')}}" method="POST" enctype="multipart/form-data">
             @csrf
             <div class="modal-content">
                 <div class="modal-header">
@@ -15,7 +15,7 @@
                         <div class="col-lg-12">
                             <div>
                                 <label class="form-label">Prompt</label>
-                                <textarea class="form-control" rows="3" name="prompt"></textarea>
+                                <textarea class="form-control" rows="3" name="message"></textarea>
                             </div>
                         </div>
                 </div>

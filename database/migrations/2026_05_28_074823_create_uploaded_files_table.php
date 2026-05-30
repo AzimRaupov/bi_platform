@@ -14,9 +14,23 @@ return new class extends Migration
         Schema::create('uploaded_files', function (Blueprint $table) {
             $table->id();
             $table->foreignId('company_id')->constrained('companies');
-            $table->string('original_nam',500);
+            $table->foreignId('chat_id')->constrained('ai_chats');
+            $table->foreignId('message_id')->constrained('ai_chat_messages');
+            $table->string('original_name',500);
             $table->string('file_path',500);
-            $table->enum('file_type',['pdf','doc','docx','excel','txt','ppt','pptx','sql'])->default('txt');
+            $table->enum('file_type', [
+                'pdf',
+                'doc',
+                'docx',
+                'xls',
+                'xlsx',
+                'txt',
+                'ppt',
+                'pptx',
+                'sql',
+                'csv',
+                'other'
+            ])->default('other');
             $table->bigInteger('file_size')->default(0);
             $table->enum('status',['pending','queued','processing','extracted','etl_processing','ready','failed'])->default('pending');
             $table->text('error_message')->nullable();
