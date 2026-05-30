@@ -16,7 +16,6 @@ return new class extends Migration
             $table->foreignId('chat_id')->constrained('ai_chats');
             $table->text('message')->nullable();
             $table->text('answer')->nullable();
-            $table->foreignId('file_id')->nullable()->constrained('uploaded_files');
             $table->integer('tokens_used')->default(0);
             $table->json('tool_results')->nullable();
             $table->enum('status', ['unread', 'send', 'analyze', 'generate'])->default('unread');
