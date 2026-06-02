@@ -1,11 +1,9 @@
-@extends('company.layouts.app')
 
-
-@section('page_header')
+@push('page_header')
     @include('company.partials.content_header')
-@endsection
+@endpush
 
-@section('content')
+<div>
     <div class="row row-deck row-cards">
         <div class="col-sm-12 col-lg-6">
             <div class="card card-gradient">
@@ -2994,4 +2992,5 @@
             </div>
         </div>
     </div>
-@endsection
+
+</div>

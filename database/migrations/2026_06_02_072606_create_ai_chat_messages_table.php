@@ -13,12 +13,13 @@ return new class extends Migration
     {
         Schema::create('ai_chat_messages', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('chat_id')->constrained('ai_chats');
-            $table->text('message')->nullable();
-            $table->text('answer')->nullable();
-            $table->integer('tokens_used')->default(0);
+            $table->foreignId('chat_id')->nullable()->constrained('ai_chats')->nullOnDelete();
+            $table->foreignId('file_id')->nullable();
+            $table->text('message');
+            $table->longText('answer')->nullable();
+            $table->unsignedInteger('tokens_used')->nullable();
             $table->json('tool_results')->nullable();
-            $table->enum('status', ['unread', 'send', 'analyze', 'generate'])->default('unread');
+            $table->string('status')->nullable();
             $table->timestamps();
         });
     }
