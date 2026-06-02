@@ -14,7 +14,9 @@ class Dashboard extends Model
      */
     protected $fillable = [
         'company_id',
+        'chat_id',
         'name',
+        'status',
         'description',
         'version',
     ];

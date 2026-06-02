@@ -17,6 +17,7 @@ class AiChat extends Model
         'user_id',
         'company_id',
         'title',
+        'status'
     ];
 
     /**

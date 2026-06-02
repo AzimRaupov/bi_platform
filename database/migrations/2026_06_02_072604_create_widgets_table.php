@@ -11,12 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('dashboards', function (Blueprint $table) {
+        Schema::create('widgets', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('company_id')->constrained('companies');
-            $table->string('name');
+            $table->string('name')->nullable();
             $table->text('description')->nullable();
-            $table->integer('version')->default(1);
+            $table->longText('scheme')->nullable();
             $table->timestamps();
         });
     }
@@ -26,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('dashboards');
+        Schema::dropIfExists('widgets');
     }
 };

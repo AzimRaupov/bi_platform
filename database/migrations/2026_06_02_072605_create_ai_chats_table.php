@@ -13,9 +13,10 @@ return new class extends Migration
     {
         Schema::create('ai_chats', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->nullable()->constrained('users');
-            $table->foreignId('company_id')->constrained('companies');
-            $table->string('title',500)->default('Data to Dashboard');
+            $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('company_id')->nullable()->constrained()->nullOnDelete();
+            $table->string('title')->nullable();
+            $table->string('status')->nullable();
             $table->timestamps();
         });
     }
