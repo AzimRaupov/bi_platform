@@ -17,6 +17,8 @@ return new class extends Migration
             $table->foreignId('widget_id')->nullable()->constrained('widgets')->nullOnDelete();
             $table->text('instruction');
             $table->string('title');
+            $table->integer('position')->default(0);
+            $table->enum('status', ['active', 'inactive', 'draft'])->default('draft');
             $table->timestamps();
         });
     }

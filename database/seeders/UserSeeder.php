@@ -15,16 +15,21 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        $company=Company::query()->create([
-            'name'=>'Start Coding',
-            'is_active' => true
-        ]);
-        $user=User::query()->create([
-            'name'=>'Start Coding',
-            'email' => 'zmraupov@gmail.com',
-            'role'=>'company',
-            'password'=>Hash::make('zmraupov@gmail.com'),
-            'company_id' =>$company->id
-        ]);
+        $company = Company::query()->updateOrCreate(
+            ['name' => 'Start Coding'],
+            [
+                'is_active' => true,
+            ]
+        );
+
+        $user = User::query()->updateOrCreate(
+            ['email' => 'zmraupov@gmail.com'],
+            [
+                'name' => 'Start Coding',
+                'role' => 'company',
+                'password' => Hash::make('zmraupov@gmail.com'),
+                'company_id' => $company->id,
+            ]
+        );
     }
 }

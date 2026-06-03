@@ -16,22 +16,14 @@ class MultiSeriesTrendSeeder extends Seeder
         $schemeData = [
             'series' => [
                 [
-                    'name' => 'name',
+                    'name' => 'string',
                     'data' => [
                         4164, 4652, 4817,
                     ],
                 ],
-                [
-                    'name' => 'name',
-                    'data' => [
-                        2164, 2292, 2386,
-                    ],
-                ]
             ],
             'labels' => [
-                '2020-06-20',
-                '2020-06-21',
-
+                'date|string',
             ],
         ];
 

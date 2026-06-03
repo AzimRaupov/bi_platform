@@ -89,44 +89,15 @@ class TableDataHandler
     {
         $upload_id ??= $this->uploadData->id;
 
-        $data = $this->to_json(3);
-        $data = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+        $rows = $this->to_json(100);
 
-        $prompt = <<<PROMPT
-You are a data schema analyst. Analyze the provided data sample and generate a JSON Schema that accurately describes its structure.
+        $this->scheme = [];
 
-## Input Data (first rows of the dataset):
-{$data}
+        if (!empty($rows)) {
 
-## Task:
-Generate a JSON Schema for this dataset following these strict rules:
-
-1. The schema must be a JSON object with these exact top-level keys:
-   - "title" — short name for the schema (in the same language as the column headers)
-   - "description" — one sentence describing what the dataset represents
-   - "type" — always "array"
-   - "items" — object describing a single row
-
-2. Inside "items.properties", create one entry per column with:
-   - "type" — infer correctly: "integer", "number", "string", "boolean"
-   - "format" — add "date" for date strings (YYYY-MM-DD), omit otherwise
-   - "description" — one sentence explaining what this field represents (same language as headers)
-
-3. "items.required" must list ALL column names.
-
-4. Column names must be taken EXACTLY as they appear in the header row (row 0).
-
-5. Return ONLY valid JSON. No markdown, no backticks, no explanation — just the raw JSON object.
-PROMPT;
-
-        $this->scheme = (new AIService(responseFormat: 'json'))->ask($prompt);
-
-        if (is_string($this->scheme)) {
-            $this->scheme = json_decode($this->scheme, true);
-        }
-
-        if (is_object($this->scheme)) {
-            $this->scheme = json_decode(json_encode($this->scheme), true);
+            foreach (array_keys($rows[0]) as $column) {
+                $this->scheme[$column] = $this->detectColumnType($column, $rows);
+            }
         }
 
         $pathScheme = storage_path(
@@ -137,17 +108,133 @@ PROMPT;
 
         $this->saveJson($this->scheme, $pathScheme);
 
-        $properties = $this->scheme['items']['properties'] ?? [];
-
         $pathProperties = storage_path(
             'app/' . $this->storagePath . 'extracted_data/properties.json'
         );
 
         File::ensureDirectoryExists(dirname($pathProperties));
 
-        $this->saveJson($properties, $pathProperties);
+        $this->saveJson($this->scheme, $pathProperties);
 
         return $this->scheme;
+    }
+    protected function buildSchema(array $rows): array
+    {
+        if (empty($rows)) {
+            return [
+                'title' => 'Dataset',
+                'description' => 'Imported dataset',
+                'type' => 'array',
+                'items' => [
+                    'type' => 'object',
+                    'properties' => [],
+                    'required' => [],
+                ],
+            ];
+        }
+
+        $firstRow = $rows[0];
+
+        $properties = [];
+
+        foreach ($firstRow as $column => $value) {
+
+            $type = $this->detectColumnType($column, $rows);
+
+            $properties[$column] = [
+                'type' => $type,
+            ];
+
+            if ($type === 'string' && $this->isDateColumn($column, $rows)) {
+                $properties[$column]['format'] = 'date';
+            }
+        }
+
+        return [
+            'title' => pathinfo($this->uploadData->original_name ?? 'Dataset', PATHINFO_FILENAME),
+            'description' => 'Автоматически определенная структура таблицы',
+            'type' => 'array',
+            'items' => [
+                'type' => 'object',
+                'properties' => $properties,
+                'required' => array_keys($properties),
+            ],
+        ];
+    }
+    protected function detectColumnType(string $column, array $rows): string
+    {
+        $isInteger = true;
+        $isNumber = true;
+        $isDate = true;
+        $isBoolean = true;
+
+        foreach ($rows as $row) {
+
+            $value = $row[$column] ?? null;
+
+            if ($value === null || $value === '') {
+                continue;
+            }
+
+            if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', (string)$value)) {
+                $isDate = false;
+            }
+
+            if (!filter_var($value, FILTER_VALIDATE_INT) && !is_int($value)) {
+                $isInteger = false;
+            }
+
+            if (!is_numeric($value)) {
+                $isNumber = false;
+            }
+
+            if (
+                !is_bool($value) &&
+                !in_array(strtolower((string)$value), ['true', 'false', '0', '1'], true)
+            ) {
+                $isBoolean = false;
+            }
+        }
+
+        if ($isDate) {
+            return 'date';
+        }
+
+        if ($isBoolean) {
+            return 'boolean';
+        }
+
+        if ($isInteger) {
+            return 'integer';
+        }
+
+        if ($isNumber) {
+            return 'number';
+        }
+
+        return 'string';
+    }
+    protected function isDateColumn(string $column, array $rows): bool
+    {
+        foreach ($rows as $row) {
+
+            $value = $row[$column] ?? null;
+
+            if ($value === null || $value === '') {
+                continue;
+            }
+
+            if (
+                !preg_match(
+                    '/^\d{4}-\d{2}-\d{2}$/',
+                    (string) $value
+                )
+            ) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -216,8 +303,7 @@ PROMPT;
     }
     public function end()
     {
-        $this->chat->title=$this->scheme['title'];
-        $this->chat->save();
+
         ExtractedData::query()->create([
             'file_id' => $this->uploadData->id,
             'message_id' => $this->message->id,

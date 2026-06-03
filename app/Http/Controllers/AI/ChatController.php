@@ -75,11 +75,11 @@ class ChatController extends Controller
         });
         // безопасный вызов
 
-//        $save_handler=new TableDataHandler($message->id, $uploadData->id,$chat->id);
-//        $result=$save_handler->end();
+        $save_handler=new TableDataHandler($message->id, $uploadData->id,$chat->id);
+        $result=$save_handler->end();
 
 
-        $resultDashboard=new DashboardGenerator(1,1);
+        $resultDashboard=new DashboardGenerator($chat->id,$message->id);
         dd($resultDashboard);
 
     }

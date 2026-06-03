@@ -62,6 +62,7 @@ class AIService
             'temperature'       => 1.0,
             'frequency_penalty' => 0,
             'presence_penalty'  => 0,
+
         ]);
 
         $decoded = json_decode($response, true);

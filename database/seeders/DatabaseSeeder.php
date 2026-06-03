@@ -3,8 +3,11 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use Database\Seeders\Widgets\MiniCountersSeeder;
 use Database\Seeders\Widgets\MultiSeriesTrendSeeder;
 use Database\Seeders\Widgets\PieChartSeeder;
+use Database\Seeders\Widgets\ScatterPlotSeeder;
+use Database\Seeders\Widgets\TableSeeder;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -20,9 +23,12 @@ class DatabaseSeeder extends Seeder
         // User::factory(10)->create();
 
         $this->call([
+            UserSeeder::class,
             MultiSeriesTrendSeeder::class,
             PieChartSeeder::class,
-            UserSeeder::class,
+            MiniCountersSeeder::class,
+            TableSeeder::class,
+            ScatterPlotSeeder::class,
         ]);
 
 
