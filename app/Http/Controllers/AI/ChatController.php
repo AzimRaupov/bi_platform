@@ -7,6 +7,7 @@ use App\Helpers\Dashboard\DashboardGenerator;
 use App\Helpers\DataHandlers\TableDataHandler;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AI\StoreChatRequest;
+use App\Jobs\GeneratorDashboardJob;
 use App\Models\AiChat;
 use App\Models\AiChatMessage;
 use App\Models\UploadedFile;
@@ -25,12 +26,12 @@ class ChatController extends Controller
         $message = null;
         $uploadData = null;
 
-        DB::transaction(function () use ($request, $user, &$message, &$uploadData,&$chat) {
+        DB::transaction(function () use ($request, $user, &$message, &$uploadData, &$chat) {
 
             $chat = AiChat::query()->create([
-                'user_id'    => $user->id,
+                'user_id' => $user->id,
                 'company_id' => $user->company_id,
-                'title'      => 'None',
+                'title' => 'None',
             ]);
 
             $message = AiChatMessage::query()->create([
@@ -45,8 +46,8 @@ class ChatController extends Controller
                 $extension = strtolower($file->getClientOriginalExtension());
 
                 $allowedTypes = [
-                    'pdf','doc','docx','xls','xlsx',
-                    'txt','ppt','pptx','sql','csv'
+                    'pdf', 'doc', 'docx', 'xls', 'xlsx',
+                    'txt', 'ppt', 'pptx', 'sql', 'csv',
                 ];
 
                 $fileType = in_array($extension, $allowedTypes)
@@ -62,27 +63,30 @@ class ChatController extends Controller
                 );
 
                 $uploadData = UploadedFile::query()->create([
-                    'company_id'    => $user->company_id,
-                    'chat_id'       => $chat->id,
-                    'message_id'    => $message->id,
+                    'company_id' => $user->company_id,
+                    'chat_id' => $chat->id,
+                    'message_id' => $message->id,
                     'original_name' => $file->getClientOriginalName(),
-                    'file_path'     => $filePath,
-                    'file_type'     => $fileType,
-                    'file_size'     => $file->getSize(),
-                    'status'        => 'pending',
+                    'file_path' => $filePath,
+                    'file_type' => $fileType,
+                    'file_size' => $file->getSize(),
+                    'status' => 'pending',
                 ]);
             }
         });
-        // безопасный вызов
-
-        $save_handler=new TableDataHandler($message->id, $uploadData->id,$chat->id);
-        $result=$save_handler->end();
 
 
-        $resultDashboard=new DashboardGenerator($chat->id,$message->id);
-        dd($resultDashboard);
+
+        dispatch(new GeneratorDashboardJob($message->id, $chat->id,$uploadData->id));
+
+
+
+        return redirect()
+            ->back()
+            ->with('status', 'Dashboard generation started successfully.');
 
     }
+
     public function show($chat_id)
     {
 
@@ -104,11 +108,11 @@ class ChatController extends Controller
         $message = AiChatMessage::query()->create([
             'chat_id' => $chat->id,
             'message' => $messageText,
-            'status'  => 'send',
+            'status' => 'send',
         ]);
 
         try {
-            $reply = (new AIService())->ask(
+            $reply = (new AIService)->ask(
                 $this->buildDashboardPrompt($chat, $messageText, $message->id),
                 'Ты умный AI-ассистент, встроенный в дашборд компании. Отвечай кратко, конкретно и на русском языке.'
             );

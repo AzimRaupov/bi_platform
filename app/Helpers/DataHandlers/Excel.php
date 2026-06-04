@@ -2,7 +2,4 @@
 
 namespace App\Helpers\DataHandlers;
 
-class Excel
-{
-
-}
+class Excel {}

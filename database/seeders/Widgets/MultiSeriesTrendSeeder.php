@@ -3,7 +3,6 @@
 namespace Database\Seeders\Widgets;
 
 use App\Models\Widget;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class MultiSeriesTrendSeeder extends Seeder
@@ -18,12 +17,12 @@ class MultiSeriesTrendSeeder extends Seeder
                 [
                     'name' => 'string',
                     'data' => [
-                        4164, 4652, 4817,
+                        12,
                     ],
                 ],
             ],
             'labels' => [
-                'date|string',
+                'string',
             ],
         ];
 
@@ -32,7 +31,20 @@ class MultiSeriesTrendSeeder extends Seeder
             [
                 'name' => 'multi-series-trend',
                 'description' => 'Интерактивный линейный график для сравнения нескольких показателей в разрезе времени.',
-                'scheme' => json_encode($schemeData, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT),
+                'scheme' => json_encode(
+                    $schemeData,
+                    JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT
+                ),
+                'scheme_description' => <<<TEXT
+Поле 'series' содержит массив рядов данных для отображения на графике.
+
+Для каждого элемента в 'series':
+- name — название ряда данных (строка);
+- data — массив числовых значений (int или float).
+
+Поле 'labels' содержит массив подписей для оси X.
+Количество элементов в 'labels' должно соответствовать количеству значений в каждом массиве 'data'.
+TEXT,
             ]
         );
     }

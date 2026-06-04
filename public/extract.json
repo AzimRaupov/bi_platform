@@ -1,0 +1,22 @@
+{
+    "counters": [
+        {
+            "name": "Общая сумма продаж",
+            "value": 0,
+            "prefix": "₽",
+            "suffix": null
+        },
+        {
+            "name": "Общее количество",
+            "value": 0,
+            "prefix": null,
+            "suffix": "шт."
+        },
+        {
+            "name": "Средняя цена за ед",
+            "value": 0.0,
+            "prefix": "₽",
+            "suffix": "/ед"
+        }
+    ]
+}

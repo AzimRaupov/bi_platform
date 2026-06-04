@@ -3,6 +3,7 @@
 namespace App\Helpers\Dashboard;
 
 use App\Helpers\Ai\AIService;
+use App\Helpers\PythonRunner;
 use App\Models\AiChat;
 use App\Models\AiChatMessage;
 use App\Models\Dashboard;
@@ -13,45 +14,56 @@ use Illuminate\Support\Facades\File;
 class DashboardGenerator
 {
     public $chat;
+
     public $message;
+
     public $widgets;
+
     public $storage;
+
     public $dashboard;
+
     public $schema;
-    public function __construct($chat_id,$message_id)
+
+    public function __construct($chat_id, $message_id)
     {
-        $this->chat=AiChat::query()->with('user')->find($chat_id);
-        $this->message=AiChatMessage::query()->find($message_id);
+        $this->chat = AiChat::query()->with('user','extractedData')->find($chat_id);
+        $this->message = AiChatMessage::query()->find($message_id);
+
         $this->storage = storage_path(
-            'app/company/' .
-            $this->chat->user->email .
-            '/chats/' .
+            'app/company/'.
+            $this->chat->user->email.
+            '/chats/'.
             $this->chat->id
         );
-        $this->schema=file_get_contents($this->storage . '/extracted_data/schema.json');
+        $this->schema = file_get_contents($this->storage.'/extracted_data/schema.json');
 
-        $this->widgets=Widget::all();
-        $this->dashboard=Dashboard::query()->create(
+        $this->widgets = Widget::all();
+        $this->dashboard = Dashboard::query()->create(
             [
-                'chat_id'=>$this->chat->id,
-                'company_id' =>$this->chat->user->company_id,
-                'name'=>'sas',
-                'status'=>'generating',
+                'chat_id' => $this->chat->id,
+                'company_id' => $this->chat->user->company_id,
+                'name' => 'sas',
+                'status' => 'generating',
             ]
         );
 
-       $this->generateWidgets($this->message->message);
-        $this->generateContentToWidgets();
     }
-    public function generateWidgets($text = "Обший доход по категориям. И обшый доход по месатцам.")
+    public function getDashboard()
     {
+        return $this->dashboard;
+    }
+
+    public function generateWidgets()
+    {
+        $text=$this->message->message;
         $widgetsList = $this->widgets->select(['name', 'description']);
         $widgets = json_encode($widgetsList, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 
-        $salesReport = json_decode(file_get_contents($this->storage . '/extracted_data/schema.json'), true);
+        $salesReport = json_decode(file_get_contents($this->storage.'/extracted_data/schema.json'), true);
         $schema = json_encode($salesReport, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 
-        $system = <<<TEXT
+        $system = <<<'TEXT'
 Ты — Senior Data Analyst и эксперт по BI-системам. Твоя цель — проанализировать структуру данных, сопоставить её с запросом пользователя и выбрать наиболее эффективные инструменты визуализации из доступного списка.
 TEXT;
 
@@ -106,32 +118,31 @@ TEXT;
             $widget = $this->widgets->where('name', $list['name'])->first();
             DashboardWidget::query()->create([
                 'dashboard_id' => $this->dashboard->id,
-                'widget_id'=>$widget->id,
-                'title'=>$list['title'],
-                'instruction'=>$list['instruction'],
+                'widget_id' => $widget->id,
+                'title' => $list['title'],
+                'instruction' => $list['instruction'],
             ]);
         }
     }
 
     public function generateContentToWidgets()
     {
-        $text=$this->message->message;
-
         $widgets_dash = DashboardWidget::query()->with('widget')
             ->where('dashboard_id', $this->dashboard->id)->get();
 
-        foreach ($widgets_dash as $index=>$widget) {
-            $this->generateContentWidget($widget,$index);
+        $results = [];
+
+        foreach ($widgets_dash as $index => $widget) {
+            $results[] = $this->generateContentWidget($widget, $index);
         }
-        dd($text);
+
+        return $results;
 
     }
-    public function generateContentWidget($dashboard_widget,$position)
+
+    public function generateContentWidget($dashboard_widget, $position)
     {
-
-
-
-        $system = <<<TEXT
+        $system = <<<'TEXT'
 Ты опытный Python Data Analyst. Твоя задача — писать чистый, готовый к выполнению Python-код без какого-либо сопроводительного текста, комментариев или Markdown-разметки (не используй ```python). Код должен быть полностью автономным.
 TEXT;
 
@@ -158,6 +169,9 @@ TEXT;
 ЦЕЛЕВОЙ ФОРМАТ ВЫХОДА:
 {$dashboard_widget->widget->scheme}
 
+НАЗНАЧЕНИЕ КЛЮЧЕЙ:
+{$dashboard_widget->widget->scheme_description}
+
 ТРЕБОВАНИЯ:
 1. Используй только стандартную библиотеку Python (json, collections, datetime при необходимости) и pandas тоже исползую.
 2. Считай файл json из --path, не исползуй другие агрументы.
@@ -170,11 +184,18 @@ TEXT;
 ВАЖНО:
 - код должен запускаться без ошибок
 - никаких заглушек
+- Поля даты и времени могут быть в любом непредсказуемом формате. Обрабатывай их как обычные строки, если формат явно не указан в инструкции.
 - никаких комментариев
 TEXT;
+
         $pythonCode = (new AIService(
             responseFormat: 'text',
         ))->ask($prompt, $system);
+
+        $pythonCode = trim((string) $pythonCode);
+        $pythonCode = preg_replace('/^```(?:python)?\s*/i', '', $pythonCode);
+        $pythonCode = preg_replace('/\s*```$/', '', $pythonCode);
+        $pythonCode = preg_replace('/["\']\s*$/', '', $pythonCode);
 
         $path = $this->storage.'/dashboard/widgets/'.$dashboard_widget->id.'/generated_script.py';
 
@@ -182,9 +203,17 @@ TEXT;
 
         File::put($path, $pythonCode);
 
-        $dashboard_widget->status="active";
-        $dashboard_widget->position=$position;
-        $dashboard_widget->save();
-    }
+        $path_data = $this->chat->extractedData?->json_path;
 
+        if (! $path_data || ! file_exists($path_data)) {
+            throw new \RuntimeException(
+                'Не найден путь к JSON данным для Python: '.var_export($path_data, true)
+            );
+        }
+
+        $dashboard_widget->status = 'active';
+        $dashboard_widget->position = $position;
+        $dashboard_widget->save();
+        return $dashboard_widget;
+    }
 }

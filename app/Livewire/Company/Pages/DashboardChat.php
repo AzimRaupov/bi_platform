@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Livewire\Company\Pages;
+
 use App\Models\AiChat;
 use App\Models\AiChatMessage;
 use Illuminate\Support\Facades\Auth;
@@ -8,7 +9,6 @@ use Livewire\Component;
 
 class DashboardChat extends Component
 {
-
     public AiChat $chat;
 
     public ?int $chatId = null;
@@ -22,6 +22,7 @@ class DashboardChat extends Component
         return view('livewire.company.pages.dashboard-chat')
             ->layout('company.layouts.app');
     }
+
     public function mount(?AiChat $chat = null): void
     {
         $user = Auth::user();
@@ -43,6 +44,7 @@ class DashboardChat extends Component
 
         $this->chat->load('messages');
     }
+
     public function toggleCollapse(): void
     {
         $this->collapsed = ! $this->collapsed;

@@ -15,7 +15,7 @@ class ExtractedData extends Model
     protected $fillable = [
         'file_id',
         'company_id',
-        'message_id',
+        'chat_id',
         'document_type',
         'json_path',
         'extracted_at',

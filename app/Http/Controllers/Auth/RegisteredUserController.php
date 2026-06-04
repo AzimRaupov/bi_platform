@@ -36,9 +36,9 @@ class RegisteredUserController extends Controller
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
-        $company=Company::query()->create([
+        $company = Company::query()->create([
             'name' => $request->name,
-            'is_active' => 1
+            'is_active' => 1,
         ]);
         $user = User::create([
             'company_id' => $company->id,

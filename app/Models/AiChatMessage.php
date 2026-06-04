@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class AiChatMessage extends Model
 {
@@ -50,8 +50,8 @@ class AiChatMessage extends Model
     /**
      * Get all extracted data related to this message.
      */
-    public function extractedData(): HasMany
+    public function extractedData(): HasOne
     {
-        return $this->hasMany(ExtractedData::class, 'message_id');
+        return $this->hasOne(ExtractedData::class, 'message_id');
     }
 }

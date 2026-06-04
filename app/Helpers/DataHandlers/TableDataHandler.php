@@ -7,16 +7,23 @@ use App\Models\AiChat;
 use App\Models\AiChatMessage;
 use App\Models\ExtractedData;
 use App\Models\UploadedFile;
-use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\File;
+use Maatwebsite\Excel\Facades\Excel;
 
 class TableDataHandler
 {
     public $pathData;
+
     public $message;
+
+    public $jsonPath;
+
     public $uploadData;
+
     public $chat;
+
     public $storagePath;
+
     public $scheme;
 
     public function __construct($message_id, $upload_id, $chat_id)
@@ -32,30 +39,31 @@ class TableDataHandler
             ->findOrFail($upload_id);
 
         $this->storagePath =
-            'company/' .
-            $this->chat->user->email .
-            '/chats/' .
-            $this->chat->id . '/';
+            'company/'.
+            $this->chat->user->email.
+            '/chats/'.
+            $this->chat->id.'/';
 
         $this->pathData = storage_path(
-            'app/company/' . $this->uploadData->file_path
+            'app/company/'.$this->uploadData->file_path
         );
 
         $data = match ($this->uploadData->file_type) {
             'xlsx' => $this->xlsx(),
-            'xls'  => $this->xlsx(),
-            'csv'  => $this->csv(),
+            'xls' => $this->xlsx(),
+            'csv' => $this->csv(),
             default => [],
         };
 
         $jsonPath = storage_path(
-            'app/' .
-            $this->storagePath .
-            'extracted_data/' .
-            pathinfo($this->uploadData->file_path, PATHINFO_FILENAME) .
+            'app/'.
+            $this->storagePath.
+            'extracted_data/'.
+            pathinfo($this->uploadData->file_path, PATHINFO_FILENAME).
             '.json'
         );
 
+        $this->jsonPath = $jsonPath;
         File::ensureDirectoryExists(dirname($jsonPath));
 
         $this->saveJson($data, $jsonPath);
@@ -77,7 +85,7 @@ class TableDataHandler
         return array_values(
             array_filter(
                 $sheets[0][0] ?? [],
-                fn ($value) => !is_null($value) && $value !== ''
+                fn ($value) => ! is_null($value) && $value !== ''
             )
         );
     }
@@ -93,7 +101,7 @@ class TableDataHandler
 
         $this->scheme = [];
 
-        if (!empty($rows)) {
+        if (! empty($rows)) {
 
             foreach (array_keys($rows[0]) as $column) {
                 $this->scheme[$column] = $this->detectColumnType($column, $rows);
@@ -101,7 +109,7 @@ class TableDataHandler
         }
 
         $pathScheme = storage_path(
-            'app/' . $this->storagePath . 'extracted_data/schema.json'
+            'app/'.$this->storagePath.'extracted_data/schema.json'
         );
 
         File::ensureDirectoryExists(dirname($pathScheme));
@@ -109,7 +117,7 @@ class TableDataHandler
         $this->saveJson($this->scheme, $pathScheme);
 
         $pathProperties = storage_path(
-            'app/' . $this->storagePath . 'extracted_data/properties.json'
+            'app/'.$this->storagePath.'extracted_data/properties.json'
         );
 
         File::ensureDirectoryExists(dirname($pathProperties));
@@ -118,6 +126,7 @@ class TableDataHandler
 
         return $this->scheme;
     }
+
     protected function buildSchema(array $rows): array
     {
         if (empty($rows)) {
@@ -161,6 +170,7 @@ class TableDataHandler
             ],
         ];
     }
+
     protected function detectColumnType(string $column, array $rows): string
     {
         $isInteger = true;
@@ -176,21 +186,21 @@ class TableDataHandler
                 continue;
             }
 
-            if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', (string)$value)) {
+            if (! preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $value)) {
                 $isDate = false;
             }
 
-            if (!filter_var($value, FILTER_VALIDATE_INT) && !is_int($value)) {
+            if (! filter_var($value, FILTER_VALIDATE_INT) && ! is_int($value)) {
                 $isInteger = false;
             }
 
-            if (!is_numeric($value)) {
+            if (! is_numeric($value)) {
                 $isNumber = false;
             }
 
             if (
-                !is_bool($value) &&
-                !in_array(strtolower((string)$value), ['true', 'false', '0', '1'], true)
+                ! is_bool($value) &&
+                ! in_array(strtolower((string) $value), ['true', 'false', '0', '1'], true)
             ) {
                 $isBoolean = false;
             }
@@ -214,6 +224,7 @@ class TableDataHandler
 
         return 'string';
     }
+
     protected function isDateColumn(string $column, array $rows): bool
     {
         foreach ($rows as $row) {
@@ -225,7 +236,7 @@ class TableDataHandler
             }
 
             if (
-                !preg_match(
+                ! preg_match(
                     '/^\d{4}-\d{2}-\d{2}$/',
                     (string) $value
                 )
@@ -266,7 +277,7 @@ class TableDataHandler
 
             $row = array_values($row);
 
-            if (count(array_filter($row, fn($v) => $v !== null && $v !== '')) === 0) {
+            if (count(array_filter($row, fn ($v) => $v !== null && $v !== '')) === 0) {
                 continue;
             }
 
@@ -284,6 +295,7 @@ class TableDataHandler
 
         return $result;
     }
+
     /**
      * SAVE JSON
      */
@@ -301,14 +313,17 @@ class TableDataHandler
                 )
             ) !== false;
     }
+
     public function end()
     {
 
         ExtractedData::query()->create([
             'file_id' => $this->uploadData->id,
-            'message_id' => $this->message->id,
+            'chat_id' => $this->chat->id,
+            'json_path' => $this->jsonPath,
             'company_id'=>$this->chat->company_id,
         ]);
+
         return $this->chat;
     }
 

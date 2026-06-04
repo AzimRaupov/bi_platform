@@ -3,7 +3,6 @@
 namespace Database\Seeders\Widgets;
 
 use App\Models\Widget;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class TableSeeder extends Seeder
@@ -15,11 +14,11 @@ class TableSeeder extends Seeder
     {
         $schemeData = [
             'headers' => [
-                'items' => 'string',
+                'string',
             ],
             'rows' => [
-                'items' => [
-                    'col' => 'string|int|float',
+                [
+                    'string|int|float',
                 ],
             ],
         ];
@@ -29,9 +28,23 @@ class TableSeeder extends Seeder
             [
                 'name' => 'table',
                 'description' => 'Таблица с заголовками и строками.',
-                'scheme' => json_encode($schemeData, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT),
+                'scheme' => json_encode(
+                    $schemeData,
+                    JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT
+                ),
+                'scheme_description' => <<<TEXT
+headers — массив заголовков таблицы (строки).
+Каждый элемент представляет название колонки.
+
+rows — массив строк таблицы.
+Каждая строка представляет собой массив значений.
+
+Правила:
+- количество элементов в каждой строке rows должно совпадать с количеством headers;
+- порядок значений в rows соответствует порядку headers;
+- значения могут быть типов: string, int, float.
+TEXT,
             ]
         );
     }
-
 }

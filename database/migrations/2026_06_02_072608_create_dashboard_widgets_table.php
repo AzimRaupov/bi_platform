@@ -18,7 +18,7 @@ return new class extends Migration
             $table->text('instruction');
             $table->string('title');
             $table->integer('position')->default(0);
-            $table->enum('status', ['active', 'inactive', 'draft'])->default('draft');
+            $table->enum('status', ['draft', 'active', 'inactive', 'failed'])->default('draft');
             $table->timestamps();
         });
     }

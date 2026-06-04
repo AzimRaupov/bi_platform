@@ -14,11 +14,12 @@ return new class extends Migration
         Schema::create('extracted_data', function (Blueprint $table) {
             $table->id();
             $table->foreignId('file_id')->nullable();
+            $table->foreignId('chat_id')->nullable()->constrained('ai_chats')->nullOnDelete();;
             $table->foreignId('company_id')->nullable()->constrained()->nullOnDelete();
-            $table->foreignId('message_id')->nullable()->constrained('ai_chat_messages')->nullOnDelete();
             $table->string('document_type')->nullable();
             $table->string('json_path')->nullable();
             $table->timestamp('extracted_at')->nullable();
+            $table->enum('status',['success','failed'])->default('success');
             $table->timestamps();
         });
     }

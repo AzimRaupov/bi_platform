@@ -6,14 +6,15 @@ use Illuminate\Database\Eloquent\Model;
 
 class DashboardWidget extends Model
 {
-    protected $fillable = ['dashboard_id', 'widget_id', 'instruction','title','position','status'];
+    protected $fillable = ['dashboard_id', 'widget_id', 'instruction', 'title', 'position', 'status'];
 
-
-    public function dashboard(){
+    public function dashboard()
+    {
         return $this->belongsTo(Dashboard::class);
     }
-    public function widget(){
+
+    public function widget()
+    {
         return $this->belongsTo(Widget::class);
     }
-
 }

@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('name')->nullable();
             $table->text('description')->nullable();
             $table->longText('scheme')->nullable();
+            $table->text('scheme_description')->nullable();
             $table->timestamps();
         });
     }

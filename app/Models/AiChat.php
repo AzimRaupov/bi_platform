@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class AiChat extends Model
 {
@@ -17,7 +18,7 @@ class AiChat extends Model
         'user_id',
         'company_id',
         'title',
-        'status'
+        'status',
     ];
 
     /**
@@ -29,7 +30,10 @@ class AiChat extends Model
     {
         return [];
     }
-
+    public function extractedData(): HasOne
+    {
+        return $this->hasOne(ExtractedData::class, 'chat_id');
+    }
     /**
      * Get the user that owns the AI chat.
      */

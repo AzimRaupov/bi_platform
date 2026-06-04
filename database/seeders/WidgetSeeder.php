@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Widget;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class WidgetSeeder extends Seeder
@@ -15,10 +14,10 @@ class WidgetSeeder extends Seeder
     {
         $widgets = [
             [
-                'name'=>'',
+                'name' => '',
                 'description' => '',
 
-                'scheme'=>'    series: [
+                'scheme' => '    series: [
               {
                 name: "Mobile",
                 data: [

@@ -2,24 +2,26 @@
 
 namespace App\Helpers\Ai;
 
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use Orhanerday\OpenAi\OpenAi;
-use RuntimeException;
 
 class AIService
 {
     protected string $apiKey;
+
     protected string $model;
+
     protected int $maxTokens;
+
     protected string $responseFormat;
+
     public $language;
+
     public function __construct(
         string $prompt = '',
         int $tokens = 4000,
         string $responseFormat = 'text'
     ) {
-        $this->language='Русский';
+        $this->language = 'Русский';
         $this->apiKey = env('OPENAI_API_KEY');
         $this->model = env('GPT_MODEL', 'gpt-5-nano');
         $this->maxTokens = $tokens;
@@ -54,14 +56,14 @@ class AIService
 - работаешь как backend-валидатор и генератор схем';
 
         $response = $open_ai->chat([
-            'model'             => $this->model,
-            'messages'          => [
+            'model' => $this->model,
+            'messages' => [
                 ['role' => 'system', 'content' => $systemPrompt],
                 ['role' => 'user',   'content' => $prompt],
             ],
-            'temperature'       => 1.0,
+            'temperature' => 1.0,
             'frequency_penalty' => 0,
-            'presence_penalty'  => 0,
+            'presence_penalty' => 0,
 
         ]);
 
@@ -72,11 +74,9 @@ class AIService
             return $text;
         }
 
-        $clean  = str_replace(['```json', '```'], '', $text);
+        $clean = str_replace(['```json', '```'], '', $text);
         $parsed = json_decode($clean, true);
 
         return $parsed ?? [];
     }
-
-
 }

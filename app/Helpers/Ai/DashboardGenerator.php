@@ -8,33 +8,34 @@ use App\Models\Widget;
 
 class DashboardGenerator
 {
-
     public $chat;
+
     public $message;
 
-    public function __construct($chat_id,$message_id)
+    public function __construct($chat_id, $message_id)
     {
-        $this->chat=AiChat::query()->with('user')->find($chat_id);
-        $this->message=AiChatMessage::query()->find($message_id);
+        $this->chat = AiChat::query()->with('user')->find($chat_id);
+        $this->message = AiChatMessage::query()->find($message_id);
     }
-    public function generateContentWidget(string $userRequest='Количество по категориям'): void
+
+    public function generateContentWidget(string $userRequest = 'Количество по категориям'): void
     {
         $path = storage_path(
-            'app/company/' .
-            $this->chat->user->email .
-            '/chats/' .
-            $this->chat->id .
+            'app/company/'.
+            $this->chat->user->email.
+            '/chats/'.
+            $this->chat->id.
             '/extracted_data/sales_report.json'
         );
 
         if (! file_exists($path)) {
-            throw new \RuntimeException("Файл sales_report.json не найден");
+            throw new \RuntimeException('Файл sales_report.json не найден');
         }
 
         $salesReport = json_decode(file_get_contents($path), true);
 
         if (! is_array($salesReport) || empty($salesReport)) {
-            throw new \RuntimeException("Некорректный формат sales_report.json");
+            throw new \RuntimeException('Некорректный формат sales_report.json');
         }
 
         // Берём небольшую выборку (например, 3 строки), чтобы AI видел структуру и примеры данных
@@ -43,7 +44,7 @@ class DashboardGenerator
         $widget = Widget::query()
             ->find(2);
 
-        $system = <<<TEXT
+        $system = <<<'TEXT'
 Ты опытный Python Data Analyst. Твоя задача — писать чистый, готовый к выполнению Python-код без какого-либо сопроводительного текста, комментариев или Markdown-разметки (не используй ```python). Код должен быть полностью автономным.
 TEXT;
 
@@ -75,6 +76,7 @@ TEXT;
         // Теперь этот код можно выполнить через exec() или Docker-песочницу
         dd($pythonCode);
     }
+
     private function json(array $data): string
     {
         return json_encode(

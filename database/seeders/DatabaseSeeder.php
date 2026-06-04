@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use Database\Seeders\Widgets\DonutChartSeeder;
 use Database\Seeders\Widgets\MiniCountersSeeder;
 use Database\Seeders\Widgets\MultiSeriesTrendSeeder;
 use Database\Seeders\Widgets\PieChartSeeder;
@@ -29,8 +30,8 @@ class DatabaseSeeder extends Seeder
             MiniCountersSeeder::class,
             TableSeeder::class,
             ScatterPlotSeeder::class,
+            DonutChartSeeder::class,
         ]);
-
 
     }
 }

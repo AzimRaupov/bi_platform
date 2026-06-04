@@ -1,0 +1,106 @@
+<?php
+
+namespace App\Helpers\Dashboard\Builder;
+
+
+use App\Helpers\PythonRunner;
+use App\Models\AiChat;
+use App\Models\Dashboard;
+use App\Models\DashboardWidget;
+use Illuminate\Support\Facades\Log;
+
+class DashboardBuilder
+{
+    public $dashboard;
+    public $chat;
+    public $widgets;
+    public $storage;
+    public $layout;
+    public function __construct($dashboard_id, $chat_id){
+
+        $this->layout='layouts.dashboard';
+        $this->dashboard = Dashboard::query()->find($dashboard_id);
+        $this->chat= AiChat::query()->with(['user','extractedData'])->find($chat_id);
+        $this->widgets = DashboardWidget::query()->with('widget')->where('dashboard_id',$this->dashboard->id)->get();
+        $this->storage = storage_path(
+            'app/company/'.
+            $this->chat->user->email.
+            '/chats/'.
+            $this->chat->id
+        );
+
+    }
+
+    public function buildWidgets()
+    {
+        $content="";
+
+
+        foreach ($this->widgets as $widget) {
+            $data_path=$this->storage.'/dashboard/widgets/'.$widget->id.'/extract.json';
+            $data=json_decode(file_get_contents($data_path),true);
+            if($widget->status=="draft"){
+
+                if($widget->widget->name=="pie-chart"){
+                    $template = new PieChartTemplate($widget->id, $data);
+
+                    $content .= $template->view;
+                }
+                elseif($widget->widget->name=="multi-series-trend"){
+                    $template=new MultiSeriesTrendTemplate($widget, $data);
+
+                    $content .= $template->view;
+                }
+                elseif($widget->widget->name=="donut-chart"){
+                    $template = new DonutChartTemplate($widget->id, $data);
+                    $content .= $template->view;
+                }
+                elseif($widget->widget->name=="table"){
+                    $template=new TableTemplate($widget->id, $data,$widget);
+                    $content .= $template->view;
+                }
+                elseif($widget->widget->name=="mini-counters"){
+                    $template=new MiniCountersTemplate($data, $widget);
+                    $content .= $template->view;
+                }
+                elseif($widget->widget->name=="scatter-plot"){
+                    $template=new ScatterPlotTemplate($data, $widget);
+                    $content .= $template->view;
+                }
+
+            }
+        }
+
+        $html = view($this->layout, [
+            'content' => $content
+        ])->render();
+        file_put_contents(
+            $this->storage.'/dashboard/index.html',
+            $html
+        );
+        }
+    public function runScripts(){
+          foreach ($this->widgets as $widget){
+
+              $status='draft';
+              $path_python=$this->storage.'/dashboard/widgets/'.$widget->id.'/generated_script.py';
+
+              $run = new PythonRunner($path_python, $this->chat->extractedData->json_path);
+              $result_run=$run->run();
+              $results[]=$result_run;
+
+              if($result_run["output"][0]!="ok"){
+                  $status='failed';
+                  Log::error($result_run["output"]);
+              }
+
+              $widget->status=$status;
+              $widget->save();
+
+          }
+          return $results;
+
+    }
+
+
+}

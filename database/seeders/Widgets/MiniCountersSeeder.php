@@ -3,7 +3,6 @@
 namespace Database\Seeders\Widgets;
 
 use App\Models\Widget;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class MiniCountersSeeder extends Seeder
@@ -14,14 +13,14 @@ class MiniCountersSeeder extends Seeder
     public function run(): void
     {
         $schemeData = [
-            'counters'=>[
+            'counters' => [
                 [
-                    'name'=>'string',
-                    'value'=>'number',
-                    'prefix'=>'string|nullable',
-                    'suffix'=>'string|nullable',
-                ]
-            ]
+                    'name' => 'Имя',
+                    'value' => 120,
+                    'prefix' => '$',
+                    'suffix' => '%',
+                ],
+            ],
         ];
 
         Widget::query()->updateOrCreate(
@@ -29,7 +28,15 @@ class MiniCountersSeeder extends Seeder
             [
                 'name' => 'mini-counters',
                 'description' => 'Предназначен для отображения набора мини-счётчиков (статистики), где для каждого элемента задаются название, значение, префикс и суффикс (необязательно).',
-                'scheme' => json_encode($schemeData, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT),
+                'scheme' => json_encode(
+                    $schemeData,
+                    JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT
+                ),
+                'scheme_description' => "Поле 'counters' содержит массив счётчиков. Для каждого элемента:
+- name — название счётчика (строка);
+- value — значение счётчика (int или float);
+- prefix — префикс, отображаемый перед значением (необязательно);
+- suffix — суффикс, отображаемый после значения (необязательно).",
             ]
         );
     }
