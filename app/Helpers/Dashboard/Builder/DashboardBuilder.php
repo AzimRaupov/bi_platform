@@ -37,9 +37,10 @@ class DashboardBuilder
 
 
         foreach ($this->widgets as $widget) {
+            if($widget->status=="draft"){
             $data_path=$this->storage.'/dashboard/widgets/'.$widget->id.'/extract.json';
             $data=json_decode(file_get_contents($data_path),true);
-            if($widget->status=="draft"){
+
 
                 if($widget->widget->name=="pie-chart"){
                     $template = new PieChartTemplate($widget->id, $data);

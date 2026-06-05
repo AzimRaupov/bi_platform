@@ -16,7 +16,6 @@ class MultiSeriesTrendTemplate
         $this->data = $data;
         $this->labels = $data["labels"];
         $this->series = $data["series"];
-        dd($this->data);
         $this->view=view($this->template,['widget'=>$widget,'series'=>$this->series,'labels'=>$this->labels])->render();
         return 'ok';
     }

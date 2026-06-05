@@ -32,7 +32,7 @@ class GeneratorDashboardJob implements ShouldQueue
     {
 
 
-        $builder=new DashboardBuilder(10,76);
+        $builder=new DashboardBuilder(11,81);
         $builder->runScripts();
         $builder->buildWidgets();
         dd($builder);
@@ -44,6 +44,8 @@ class GeneratorDashboardJob implements ShouldQueue
         $dashboard_generate->generateWidgets();
         $dashboard_generate->generateContentToWidgets();
         $dashboard=$dashboard_generate->getDashboard();
+
+
 
 
     }
