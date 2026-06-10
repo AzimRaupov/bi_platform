@@ -14,7 +14,6 @@ class TableTemplate
         $this->id = $id;
         $this->data = $data;
        $this->widget = $widget;
-
         $this->view=view($this->template,['id'=>$id,'data'=>$this->data,'widget'=>$widget])->render();
         return 'ok';
     }

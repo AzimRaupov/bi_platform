@@ -34,6 +34,10 @@ class AiChat extends Model
     {
         return $this->hasOne(ExtractedData::class, 'chat_id');
     }
+    public function dashboard(): HasOne
+    {
+        return $this->hasOne(Dashboard::class, 'chat_id');
+    }
     /**
      * Get the user that owns the AI chat.
      */

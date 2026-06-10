@@ -3,8 +3,6 @@
 namespace App\Http\Controllers\AI;
 
 use App\Helpers\Ai\AIService;
-use App\Helpers\Dashboard\DashboardGenerator;
-use App\Helpers\DataHandlers\TableDataHandler;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AI\StoreChatRequest;
 use App\Jobs\GeneratorDashboardJob;
@@ -25,6 +23,7 @@ class ChatController extends Controller
 
         $message = null;
         $uploadData = null;
+        $chat = null;
 
         DB::transaction(function () use ($request, $user, &$message, &$uploadData, &$chat) {
 
@@ -75,11 +74,13 @@ class ChatController extends Controller
             }
         });
 
+        if (! $chat || ! $message || ! $uploadData) {
+            return redirect()
+                ->back()
+                ->withErrors(['file' => 'Не удалось сохранить файл для генерации дашборда.']);
+        }
 
-
-        dispatch(new GeneratorDashboardJob($message->id, $chat->id,$uploadData->id));
-
-
+        dispatch(new GeneratorDashboardJob($message->id, $chat->id, $uploadData->id));
 
         return redirect()
             ->back()
@@ -89,71 +90,19 @@ class ChatController extends Controller
 
     public function show($chat_id)
     {
+        $chat=AiChat::query()->findOrFail($chat_id)->with('dashboard')->first();
+        $email = Auth::user()->email;
 
-        return view('company.pages.chat.show');
+        $path = storage_path("app/company/{$email}/chats/{$chat->id}/dashboard/content.blade.php");
+
+        return view('company.pages.chat.show',['chat'=>$chat,'path'=>$path]);
     }
 
-    public function message(Request $request, AiChat $chat): JsonResponse
+    public function message(Request $request)
     {
         $user = Auth::user();
 
-        abort_unless($user && $chat->company_id === $user->company_id, 404);
-
-        $data = $request->validate([
-            'message' => ['required', 'string', 'max:5000'],
-        ]);
-
-        $messageText = trim($data['message']);
-
-        $message = AiChatMessage::query()->create([
-            'chat_id' => $chat->id,
-            'message' => $messageText,
-            'status' => 'send',
-        ]);
-
-        try {
-            $reply = (new AIService)->ask(
-                $this->buildDashboardPrompt($chat, $messageText, $message->id),
-                'Ты умный AI-ассистент, встроенный в дашборд компании. Отвечай кратко, конкретно и на русском языке.'
-            );
-
-            $replyText = is_array($reply)
-                ? json_encode($reply, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
-                : trim((string) $reply);
-
-            $message->update([
-                'answer' => $replyText,
-                'status' => 'generate',
-            ]);
-        } catch (\Throwable $throwable) {
-            report($throwable);
-
-            return response()->json([
-                'saved' => true,
-                'message' => [
-                    'id' => $message->id,
-                    'content' => $message->message,
-                    'answer' => null,
-                    'status' => $message->status,
-                ],
-                'reply' => '⚠️ Не удалось получить ответ от сервера. Сообщение сохранено.',
-                'error' => true,
-            ]);
-        }
-
-        $message->refresh();
-
-        return response()->json([
-            'saved' => true,
-            'message' => [
-                'id' => $message->id,
-                'content' => $message->message,
-                'answer' => $message->answer,
-                'status' => $message->status,
-            ],
-            'reply' => $message->answer,
-            'error' => false,
-        ]);
+        return $request->all();
     }
 
     private function buildDashboardPrompt(AiChat $chat, string $messageText, ?int $excludeMessageId = null): string

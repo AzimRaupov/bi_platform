@@ -12,6 +12,6 @@ Route::get('/dashboard', function () {
 
 Route::prefix('chat')->name('chat.')->group(function () {
     Route::post('/', [ChatController::class, 'store'])->name('store');
-    Route::post('/{chat}/message', [ChatController::class, 'message'])->name('message');
+    Route::post('/message', [ChatController::class, 'message'])->name('message');
     Route::get('/{chat}', [ChatController::class, 'show'])->name('show');
 });
